@@ -37,6 +37,10 @@ class UClass : public UStruct {
     uint8_t UnknownData01[0xA0];
     TArray<FImplementedInterface> Interfaces_internal;
 #else
+
+#if !defined(UNREALSDK_GAME_BL1)
+
+   private:
     // Misc Fields I found within this block in BL2, but which we don't care about enough for me to
     //  find in UE4, or to want to increase the compile times by including
 
@@ -49,6 +53,19 @@ class UClass : public UStruct {
     UObject* ClassDefaultObject_internal;
     uint8_t UnknownData01[0x48];
     TArray<FImplementedInterface> Interfaces_internal;
+
+#else // defined(UNREALSDK_GAME_BL1)
+
+    // NOTE: I don't know if the class has changed size; Will do a scan in ghidra for 1AC
+
+   public:
+    uint8_t UnknownData00[0xC0];
+    UObject* ClassDefaultObject_internal; // 340b
+    uint8_t UnknownData01[0x48];
+    TArray<FImplementedInterface> Interfaces_internal; //  416b
+
+#endif
+
 #endif
 
    public:

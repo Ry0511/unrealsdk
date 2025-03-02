@@ -31,7 +31,6 @@ class UStruct : public UField {
     ~UStruct() = delete;
 
     // NOLINTBEGIN(readability-magic-numbers, readability-identifier-naming)
-
 #ifdef UE4
     /* Struct this inherits from, may be null */
     UStruct* SuperField;
@@ -62,6 +61,9 @@ class UStruct : public UField {
      * garbage collection code */
     TArray<UObject*> ScriptObjectReferences;
 #else
+
+#if !defined(UNREALSDK_GAME_BL1)
+
    private:
     uint8_t UnknownData00[0x8];
 
@@ -81,6 +83,22 @@ class UStruct : public UField {
 
     TArray<UObject*> ScriptObjectReferences;
 
+#else // defined(UNREALSDK_GAME_BL1)
+
+   public:
+    uint8_t UnknownData00[0x08];
+    UField* Children;                   // 76b
+    uint16_t PropertySize;              // 80b
+    uint8_t UnknownData01[0x1C + 0x02]; // +2 explicit padding
+    UProperty* PropertyLink;            // 112b
+    uint8_t UnknownData02[0x10];
+    TArray<UObject*> ScriptObjectReferences; // 132b
+    uint8_t UnknownData03[0x04];
+
+#endif
+
+#endif
+
     // See the description in 'uproperty.h', we have the same issue here. `UnknownData02` is 0x10 in
     // BL2, but 0x4 in TPS. Since we need it this time, we also make provisions for setters.
 
@@ -91,8 +109,7 @@ class UStruct : public UField {
      */
     [[nodiscard]] static size_t class_size(void);
 
-#endif
-   protected:
+protected:
     /**
      * @brief Reads a field on a UStruct subclass, taking into account it's variable length.
      *
@@ -121,9 +138,9 @@ class UStruct : public UField {
         return const_cast<FieldType&>(const_cast<const UStruct*>(this)->get_field(field));
     }
 
-   public:
     // NOLINTEND(readability-magic-numbers, readability-identifier-naming)
 
+   public:
 #pragma region Iterators
     struct FieldIterator {
         using iterator_category = std::forward_iterator_tag;
