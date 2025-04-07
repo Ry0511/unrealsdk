@@ -37,6 +37,9 @@ class UObject {
     FName Name;
     UObject* Outer;
 #else
+
+#ifndef UNREALSDK_GAME_BL1
+
    private:
     void* HashNext;
 
@@ -62,6 +65,24 @@ class UObject {
 
    private:
     UObject* ObjectArchetype;
+
+#else
+
+   public:
+    int32_t InternalIndex;
+    uint64_t ObjectFlags;
+    void* HashNext;
+    void* HashOuterNext;
+    void* StateFrame;
+    UObject* _Linker;
+    void* _LinkerIndex;
+    int32_t NetIndex;
+    UObject* Outer;
+    FName Name;
+    UClass* Class;
+    UObject* ObjectArchetype;
+
+#endif
 
    public:
 #endif
