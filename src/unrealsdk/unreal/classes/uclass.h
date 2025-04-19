@@ -30,13 +30,7 @@ class UClass : public UStruct {
 
     // NOLINTBEGIN(readability-magic-numbers, readability-identifier-naming)
 
-    // - NOTE: Merge Conflicts (ustruct.h and uclass.h)
-    // Commit: 7803d86de171a5e19e66688074d8809329e42bb8
-    // Manually resolved; only tested compilation for BL1, UE3, and UE4 but no more than that.
-    // ; 2025/01/19 (YYYY/MM/DD)
-    // - - -
-
-    private:
+   private:
 #ifdef UE4
     uint8_t UnknownData00[0x70];
     UObject* ClassDefaultObject_internal;
@@ -66,15 +60,14 @@ class UClass : public UStruct {
    public:
     TArray<FImplementedInterface> Interfaces_internal;
 
-#else // defined(UNREALSDK_GAME_BL1)
+#else  // defined(UNREALSDK_GAME_BL1)
 
-    // NOTE: I don't know if the class has changed size; Will do a scan in ghidra for 1AC
-
+    // NOTE: The class size could be wrong
    public:
     uint8_t UnknownData00[0xC0];
-    UObject* ClassDefaultObject_internal; // 340b
+    UObject* ClassDefaultObject_internal;  // 340b
     uint8_t UnknownData01[0x48];
-    TArray<FImplementedInterface> Interfaces_internal; //  416b
+    TArray<FImplementedInterface> Interfaces_internal;  //  416b
 
 #endif
 

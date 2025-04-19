@@ -24,9 +24,9 @@ class UField : public UObject {
     // NOLINTNEXTLINE(readability-identifier-naming)
     UField* Next;
 
-#else // defined(UNREALSDK_GAME_BL1)
+#else  // defined(UNREALSDK_GAME_BL1)
 
-   public:
+   public:  // NOLINT(*-redundant-access-specifiers)
     UStruct* SuperField;
     UField* Next;
 

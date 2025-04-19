@@ -69,7 +69,7 @@ class UObject {
 
 #else
 
-   public:
+   public:  // NOLINT(*-redundant-access-specifiers)
     int32_t InternalIndex;
     uint64_t ObjectFlags;
     void* HashNext;

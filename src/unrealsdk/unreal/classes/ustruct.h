@@ -32,12 +32,6 @@ class UStruct : public UField {
 
     // NOLINTBEGIN(readability-magic-numbers, readability-identifier-naming)
 
-    // - NOTE: Merge Conflicts (ustruct.h and uclass.h)
-    // Commit: 7803d86de171a5e19e66688074d8809329e42bb8
-    // Manually resolved; only tested compilation for BL1, UE3, and UE4 but no more than that.
-    // ; 2025/01/19 (YYYY/MM/DD)
-    // - - -
-
 #ifdef UE4
     /* Struct this inherits from, may be null */
     UStruct* SuperField;
@@ -90,16 +84,16 @@ class UStruct : public UField {
 
     TArray<UObject*> ScriptObjectReferences;
 
-#else // defined(UNREALSDK_GAME_BL1)
+#else  // defined(UNREALSDK_GAME_BL1)
 
-   public:
+   public:  // NOLINT(*-redundant-access-specifiers)
     uint8_t UnknownData00[0x08];
-    UField* Children;                   // 76b
-    uint16_t PropertySize;              // 80b
-    uint8_t UnknownData01[0x1C + 0x02]; // +2 explicit padding
-    UProperty* PropertyLink;            // 112b
+    UField* Children;
+    uint16_t PropertySize;
+    uint8_t UnknownData01[0x1E];
+    UProperty* PropertyLink;
     uint8_t UnknownData02[0x10];
-    TArray<UObject*> ScriptObjectReferences; // 132b
+    TArray<UObject*> ScriptObjectReferences;
     uint8_t UnknownData03[0x04];
 
 #endif
@@ -116,7 +110,7 @@ class UStruct : public UField {
      */
     [[nodiscard]] static size_t class_size(void);
 
-protected:
+   protected:
     /**
      * @brief Reads a field on a UStruct subclass, taking into account it's variable length.
      *
@@ -129,7 +123,7 @@ protected:
     template <typename SubType,
               typename FieldType,
               typename = std::enable_if_t<std::is_base_of_v<UStruct, SubType>>>
-    [[nodiscard]] const FieldType& get_field(FieldType SubType::*field) const {
+    [[nodiscard]] const FieldType& get_field(FieldType SubType::* field) const {
 #ifdef UE4
         return reinterpret_cast<const SubType*>(this)->*field;
 #else
@@ -141,7 +135,7 @@ protected:
     template <typename SubType,
               typename FieldType,
               typename = std::enable_if_t<std::is_base_of_v<UStruct, SubType>>>
-    FieldType& get_field(FieldType SubType::*field) {
+    FieldType& get_field(FieldType SubType::* field) {
         return const_cast<FieldType&>(const_cast<const UStruct*>(this)->get_field(field));
     }
 

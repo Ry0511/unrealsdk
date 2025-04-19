@@ -98,15 +98,15 @@ class UProperty : public UField {
    private:
     uint8_t UnknownData01[0x18];
 
-#else // defined(UNREALSDK_GAME_BL1)
+#else  // defined(UNREALSDK_GAME_BL1)
 
-   public: // Total Size: 140b
-    int32_t ArrayDim;            // 68b
-    int32_t ElementSize;         // 72b
-    uint32_t PropertyFlags;      // 76b
+   public:  // NOLINT(*-redundant-access-specifiers)
+    int32_t ArrayDim;
+    int32_t ElementSize;
+    uint32_t PropertyFlags;
     uint8_t UnknownData00[0x14];
-    int32_t Offset_Internal;     // 100b
-    UProperty* PropertyLinkNext; // 104b
+    int32_t Offset_Internal;
+    UProperty* PropertyLinkNext;
     uint8_t UnknownData01[0x20];
 
 #endif
@@ -133,7 +133,7 @@ class UProperty : public UField {
     template <typename PropertyType,
               typename FieldType,
               typename = std::enable_if_t<std::is_base_of_v<UProperty, PropertyType>>>
-    FieldType read_field(FieldType PropertyType::*field) const {
+    FieldType read_field(FieldType PropertyType::* field) const {
 #ifdef UE4
         return reinterpret_cast<const PropertyType*>(this)->*field;
 #else

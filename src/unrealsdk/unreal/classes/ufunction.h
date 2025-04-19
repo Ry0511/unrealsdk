@@ -42,6 +42,8 @@ class UFunction : public UStruct {
     int32_t EventGraphCallOffset;
     void* Func;
 #else
+
+   public:
     uint32_t FunctionFlags_internal;
     uint16_t iNative;
     uint16_t RepOffset;
@@ -51,11 +53,8 @@ class UFunction : public UStruct {
     uint16_t ParamsSize_internal;
     uint16_t ReturnValueOffset_internal;
     uint8_t UnknownData00[0x6];
-
-#if defined(UNREALSDK_GAME_BL1)
-   public: // Used in a console command to get address of function
-#endif
     void* Func;
+
 #endif
    public:
     decltype(FunctionFlags_internal)& FunctionFlags(void);
