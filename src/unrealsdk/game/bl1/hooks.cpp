@@ -32,7 +32,7 @@ typedef void(__fastcall* process_event_func)(UObject* obj,
                                              void* /*null*/);
 process_event_func process_event_ptr;
 
-const constinit Pattern<43> PROCESS_EVENT_SIG{
+constexpr Pattern<43> PROCESS_EVENT_SIG{
     "55"             // push ebp
     "8BEC"           // mov ebp,esp
     "6A FF"          // push FFFFFFFF
@@ -124,9 +124,16 @@ static_assert(std::is_same_v<decltype(&process_event_hook), decltype(&locking_pr
 }  // namespace
 
 void BL1Hook::hook_process_event(void) {
-    bool locking = locks::FunctionCall::enabled();
-    detour(PROCESS_EVENT_SIG, locking ? locking_process_event_hook : process_event_hook,
-           &process_event_ptr, "ProcessEvent");
+    const bool locking = locks::FunctionCall::enabled();
+
+    const auto hook_process_event = [&locking] {
+        return detour(PROCESS_EVENT_SIG, locking ? locking_process_event_hook : process_event_hook,
+                      &process_event_ptr, "ProcessEvent");
+    };
+
+    while (!hook_process_event()) {
+        std::this_thread::yield();
+    }
 }
 
 void BL1Hook::process_event(UObject* object, UFunction* func, void* params) const {
@@ -147,7 +154,7 @@ typedef void(__fastcall* call_function_func)(UObject* obj,
                                              UFunction* func);
 call_function_func call_function_ptr;
 
-const constinit Pattern<31> CALL_FUNCTION_SIG{
+constexpr Pattern<31> CALL_FUNCTION_SIG{
     "55"               // push ebp
     "8DAC24 FCFBFFFF"  // lea ebp,dword ptr ss:[esp-404]
     "81EC 04040000"    // sub esp,404
@@ -248,9 +255,16 @@ static_assert(std::is_same_v<decltype(&call_function_hook), call_function_func>,
 }  // namespace
 
 void BL1Hook::hook_call_function(void) {
-    bool locking = locks::FunctionCall::enabled();
-    detour(CALL_FUNCTION_SIG, locking ? locking_call_function_hook : call_function_hook,
-           &call_function_ptr, "CallFunction");
+    const bool locking = locks::FunctionCall::enabled();
+
+    const auto hook_call_function = [&locking] {
+        return detour(CALL_FUNCTION_SIG, locking ? locking_call_function_hook : call_function_hook,
+                      &call_function_ptr, "CallFunction");
+    };
+
+    while (!hook_call_function()) {
+        std::this_thread::yield();
+    }
 }
 
 }  // namespace unrealsdk::game

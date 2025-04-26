@@ -14,10 +14,7 @@
 namespace unrealsdk::game::bl1_cfg {
 
 std::string console_key(void);
-
 bool is_log_load_package(void);
-bool is_log_save_package(void);
-int64_t init_func_poll_rate_ms(void);
 
 }  // namespace unrealsdk::game::bl1_cfg
 
