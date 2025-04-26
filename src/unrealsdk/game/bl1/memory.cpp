@@ -42,7 +42,7 @@ FMalloc* gmalloc;
 //  rarer and used pretty much exclusively by dynamic contiguous containers.
 //
 
-const constinit Pattern<20> GMALLOC_PATTERN{
+constexpr Pattern<20> GMALLOC_PATTERN{
     "8B0D {????????}"  // mov ecx,dword ptr ds:[1F73BB4]
     "8B01"             // mov eax,dword ptr ds:[ecx]
     "8B50 04"          // mov edx,dword ptr ds:[eax+4]
@@ -58,14 +58,9 @@ const constinit Pattern<20> GMALLOC_PATTERN{
 // ############################################################################//
 
 void BL1Hook::find_gmalloc(void) {
-    // TODO: I would prefer to create FMalloc if it is null since all usages are wrapped in an
-    // if null then create block. However, with the delayed hooking via the init function this will
-    // always be non-null.
-
-    gmalloc = *read_offset<FMalloc**>(GMALLOC_PATTERN.sigscan("GMalloc"));
-    if (!gmalloc) {
-        // This happens if we try to hook it too early.
-        throw std::runtime_error("GMalloc is null");
+    while (gmalloc == nullptr) {
+        gmalloc = *read_offset<FMalloc**>(GMALLOC_PATTERN.sigscan("GMalloc"));
+        std::this_thread::yield();
     }
     LOG(MISC, "GMalloc: {:p}", reinterpret_cast<void*>(gmalloc));
 }
