@@ -8,7 +8,7 @@
 namespace unrealsdk::unreal {
 
 #if defined(_MSC_VER) && defined(ARCH_X86)
-#pragma pack(push, 0x4)
+#pragma pack(push, 4)  // Using hex here breaks CLion alignment/padding info
 #endif
 
 #if defined(__clang__)
@@ -27,7 +27,8 @@ class UFunction : public UStruct {
     UFunction& operator=(UFunction&&) = delete;
     ~UFunction() = delete;
 
-    // NOLINTBEGIN(readability-magic-numbers, readability-identifier-naming)
+    // NOLINTBEGIN(readability-magic-numbers, readability-identifier-naming,
+    // *-redundant-access-specifiers)
 
    private:
 #ifdef UE4
@@ -43,7 +44,7 @@ class UFunction : public UStruct {
     void* Func;
 #else
 
-   public:
+   public: // Size: 180b, Base Offset: 148b
     uint32_t FunctionFlags_internal;
     uint16_t iNative;
     uint16_t RepOffset;
@@ -73,7 +74,8 @@ class UFunction : public UStruct {
      */
     [[nodiscard]] UProperty* find_return_param(void) const;
 
-    // NOLINTEND(readability-magic-numbers, readability-identifier-naming)
+    // NOLINTEND(readability-magic-numbers, readability-identifier-naming,
+    // *-redundant-access-specifiers)
 };
 
 template <>

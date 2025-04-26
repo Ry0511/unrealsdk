@@ -10,7 +10,7 @@
 namespace unrealsdk::unreal {
 
 #if defined(_MSC_VER) && defined(ARCH_X86)
-#pragma pack(push, 0x4)
+#pragma pack(push, 4)  // Using hex here breaks CLion alignment/padding info
 #endif
 
 #if defined(__clang__)
@@ -30,7 +30,8 @@ class UStruct : public UField {
     UStruct& operator=(UStruct&&) = delete;
     ~UStruct() = delete;
 
-    // NOLINTBEGIN(readability-magic-numbers, readability-identifier-naming)
+    // NOLINTBEGIN(readability-magic-numbers, readability-identifier-naming,
+    // *-redundant-access-specifiers)
 
 #ifdef UE4
     /* Struct this inherits from, may be null */
@@ -86,7 +87,7 @@ class UStruct : public UField {
 
 #else  // defined(UNREALSDK_GAME_BL1)
 
-   public:  // NOLINT(*-redundant-access-specifiers)
+   public: // Size: 148b, Base Offset: 68b
     uint8_t UnknownData00[0x08];
     UField* Children;
     uint16_t PropertySize;
@@ -139,7 +140,8 @@ class UStruct : public UField {
         return const_cast<FieldType&>(const_cast<const UStruct*>(this)->get_field(field));
     }
 
-    // NOLINTEND(readability-magic-numbers, readability-identifier-naming)
+    // NOLINTEND(readability-magic-numbers, readability-identifier-naming,
+    // *-redundant-access-specifiers)
 
    public:
 #pragma region Iterators

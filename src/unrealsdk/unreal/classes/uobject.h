@@ -10,7 +10,7 @@
 namespace unrealsdk::unreal {
 
 #if defined(_MSC_VER) && defined(ARCH_X86)
-#pragma pack(push, 0x4)
+#pragma pack(push, 4)  // Using hex here breaks CLion alignment/padding info
 #endif
 
 struct FImplementedInterface;
@@ -69,7 +69,8 @@ class UObject {
 
 #else
 
-   public:  // NOLINT(*-redundant-access-specifiers)
+    // NOLINTNEXTLINE(*-redundant-access-specifiers)
+   public:  // Size: 60b
     int32_t InternalIndex;
     uint64_t ObjectFlags;
     void* HashNext;
@@ -85,7 +86,7 @@ class UObject {
 
 #endif
 
-   public:
+   public:  // NOLINT(*-redundant-access-specifiers)
 #endif
 
     // NOLINTEND(readability-identifier-naming)
