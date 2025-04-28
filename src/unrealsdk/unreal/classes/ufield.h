@@ -7,7 +7,7 @@
 namespace unrealsdk::unreal {
 
 #if defined(_MSC_VER) && defined(ARCH_X86)
-#pragma pack(push, 0x4)
+#pragma pack(push, 4)  // Using hex here breaks CLion alignment/padding info
 #endif
 
 class UField : public UObject {
@@ -19,8 +19,21 @@ class UField : public UObject {
     UField& operator=(UField&&) = delete;
     ~UField() = delete;
 
+#if !defined(UNREALSDK_GAME_BL1)
+
     // NOLINTNEXTLINE(readability-identifier-naming)
     UField* Next;
+
+#else  // defined(UNREALSDK_GAME_BL1)
+
+    // NOLINTBEGIN(readability-identifier-naming,*-redundant-access-specifiers)
+   public:  // Size: 8b, Base Offset: 60b
+    UStruct* SuperField;
+    UField* Next;
+
+    // NOLINTEND(readability-identifier-naming,*-redundant-access-specifiers)
+
+#endif
 };
 
 template <>

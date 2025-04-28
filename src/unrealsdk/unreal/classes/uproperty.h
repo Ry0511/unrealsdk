@@ -5,12 +5,11 @@
 
 #include "unrealsdk/unreal/class_traits.h"
 #include "unrealsdk/unreal/classes/ufield.h"
-#include "unrealsdk/unreal/structs/fname.h"
 
 namespace unrealsdk::unreal {
 
 #if defined(_MSC_VER) && defined(ARCH_X86)
-#pragma pack(push, 0x4)
+#pragma pack(push, 4)  // Using hex here breaks CLion alignment/padding info
 #endif
 
 #if defined(__clang__)
@@ -52,7 +51,8 @@ class UProperty : public UField {
     UProperty& operator=(UProperty&&) = delete;
     ~UProperty() = delete;
 
-    // NOLINTBEGIN(readability-magic-numbers, readability-identifier-naming)
+    // NOLINTBEGIN(readability-magic-numbers, readability-identifier-naming,
+    // *-redundant-access-specifiers)
 
 #ifdef UE4
     int32_t ArrayDim;
@@ -83,6 +83,7 @@ class UProperty : public UField {
     UProperty* PostConstructLinkNext;  // 0x0030(0x0040) MISSED OFFSET
 #else
 
+#if !defined(UNREALSDK_GAME_BL1)
     int32_t ArrayDim;
     int32_t ElementSize;
     uint32_t PropertyFlags;
@@ -96,6 +97,19 @@ class UProperty : public UField {
 
    private:
     uint8_t UnknownData01[0x18];
+
+#else  // defined(UNREALSDK_GAME_BL1)
+
+   public:  // Size: 140b, Base Offset: 68b
+    int32_t ArrayDim;
+    int32_t ElementSize;
+    uint32_t PropertyFlags;
+    uint8_t UnknownData00[0x14];
+    int32_t Offset_Internal;
+    UProperty* PropertyLinkNext;
+    uint8_t UnknownData01[0x20];
+
+#endif
 
     /**
      * @brief Gets the size of this class.
@@ -129,7 +143,8 @@ class UProperty : public UField {
 #endif
     }
 
-    // NOLINTEND(readability-magic-numbers, readability-identifier-naming)
+    // NOLINTEND(readability-magic-numbers, readability-identifier-naming,
+    // *-redundant-access-specifiers)
 };
 
 template <>

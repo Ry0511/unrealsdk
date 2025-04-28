@@ -10,7 +10,7 @@
 namespace unrealsdk::unreal {
 
 #if defined(_MSC_VER) && defined(ARCH_X86)
-#pragma pack(push, 0x4)
+#pragma pack(push, 4)  // Using hex here breaks CLion alignment/padding info
 #endif
 
 #if defined(__clang__)
@@ -30,7 +30,8 @@ class UStruct : public UField {
     UStruct& operator=(UStruct&&) = delete;
     ~UStruct() = delete;
 
-    // NOLINTBEGIN(readability-magic-numbers, readability-identifier-naming)
+    // NOLINTBEGIN(readability-magic-numbers, readability-identifier-naming,
+    // *-redundant-access-specifiers)
 
 #ifdef UE4
     /* Struct this inherits from, may be null */
@@ -62,6 +63,9 @@ class UStruct : public UField {
      * garbage collection code */
     TArray<UObject*> ScriptObjectReferences;
 #else
+
+#if !defined(UNREALSDK_GAME_BL1)
+
    private:
     uint8_t UnknownData00[0x8];
 
@@ -81,6 +85,22 @@ class UStruct : public UField {
 
     TArray<UObject*> ScriptObjectReferences;
 
+#else  // defined(UNREALSDK_GAME_BL1)
+
+   public: // Size: 148b, Base Offset: 68b
+    uint8_t UnknownData00[0x08];
+    UField* Children;
+    uint16_t PropertySize;
+    uint8_t UnknownData01[0x1E];
+    UProperty* PropertyLink;
+    uint8_t UnknownData02[0x10];
+    TArray<UObject*> ScriptObjectReferences;
+    uint8_t UnknownData03[0x04];
+
+#endif
+
+#endif
+
     // See the description in 'uproperty.h', we have the same issue here. `UnknownData02` is 0x10 in
     // BL2, but 0x4 in TPS. Since we need it this time, we also make provisions for setters.
 
@@ -91,7 +111,6 @@ class UStruct : public UField {
      */
     [[nodiscard]] static size_t class_size(void);
 
-#endif
    protected:
     /**
      * @brief Reads a field on a UStruct subclass, taking into account it's variable length.
@@ -121,9 +140,10 @@ class UStruct : public UField {
         return const_cast<FieldType&>(const_cast<const UStruct*>(this)->get_field(field));
     }
 
-   public:
-    // NOLINTEND(readability-magic-numbers, readability-identifier-naming)
+    // NOLINTEND(readability-magic-numbers, readability-identifier-naming,
+    // *-redundant-access-specifiers)
 
+   public:
 #pragma region Iterators
     struct FieldIterator {
         using iterator_category = std::forward_iterator_tag;
