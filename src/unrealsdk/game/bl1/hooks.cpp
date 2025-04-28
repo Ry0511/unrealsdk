@@ -177,24 +177,6 @@ void __fastcall call_function_hook(UObject* obj,
             WrappedStruct args{func};
             auto original_code = stack->extract_current_args(args);
 
-            // Using the variable directly since access via FunctionFlags() relies on the SDK being
-            //  initialised which may not have fully happened yet.
-            auto flags = func->FunctionFlags_internal;
-            if (func->iNative == 0 && (flags & UFunction::FUNC_NATIVE) != 0U) {
-                uint8_t buf[1024]{};  // Size is taken from ghidra
-
-                // BOOL UObject::ProcessRemoteFunction( ... )
-                auto res = obj->call_virtual_function<int32_t>(0x3F, func, &buf[0], stack);
-
-                // This effectively does what we just did; Just also does any 'cleanup' it needs to
-                // as well
-                if (res == 0) {
-                    stack->Code = original_code;
-                    call_function_ptr(obj, edx, stack, result, func);
-                    return;
-                }
-            }
-
             hook_manager::Details hook{.obj = obj,
                                        .args = &args,
                                        .ret = {func->find_return_param()},
