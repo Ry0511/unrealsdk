@@ -14,9 +14,20 @@ using namespace unrealsdk::unreal;
 
 namespace unrealsdk::game {
 
+// These could be defined in the class but since they are only used here this will do for now.
+namespace {
+
+std::atomic_bool bl1_has_initialised{false};
+
+using Clock = std::chrono::steady_clock;
+
+void hook_init_func(void);
+}  // namespace
+
 void BL1Hook::hook(void) {
     hook_antidebug();
 
+    hook_init_func();
     hook_process_event();
     hook_call_function();
 
@@ -33,6 +44,14 @@ void BL1Hook::hook(void) {
     hexedit_array_limit();
     hexedit_array_limit_message();
 
+    // https://youtu.be/D3Igg77EvF8
+    while (!bl1_has_initialised.load(std::memory_order_relaxed)) {
+        // NOLINTNEXTLINE(*)
+        std::this_thread::sleep_for(std::chrono::milliseconds{50});
+    }
+
+    // Delayed until after initialisation to ensure we grab valid data; Should be able to avoid this
+    // and grab earlier if we grab a pointer to the global not the value held by the global.
     find_gobjects();
     find_gnames();
     find_gmalloc();
@@ -85,9 +104,7 @@ void BL1Hook::find_fframe_step(void) {
 }
 
 void BL1Hook::fframe_step(FFrame* frame, UObject* /*obj*/, void* param) const {
-    const uint8_t val = *frame->Code;
-    frame->Code++;
-    (*fframe_step_gnatives)[val](frame, param);
+    (*fframe_step_gnatives)[*frame->Code++](frame, param);
 }
 
 // ############################################################################//
@@ -126,6 +143,115 @@ void BL1Hook::find_fname_init(void) {
 void BL1Hook::fname_init(FName* name, const wchar_t* str, int32_t number) const {
     fname_init_ptr(name, str, number, 1, 1);
 }
+
+// ############################################################################//
+//  | INIT FUNCTION |
+// ############################################################################//
+
+namespace {
+
+// - NOTE -
+// The init function is only used to delay initialisation of the SDK to ensure that we can proceed
+// with injection at the right time. However, the Steams version of this function is different
+// the core functionality is the same though.
+
+constexpr Pattern<64> INIT_FUNC_STEAM_SIG{
+    "6A FF"          // push FFFFFFFF
+    "68 ????????"    // push borderlands.198D998
+    "64A1 00000000"  // mov eax,dword ptr fs:[0]
+    "50"             // push eax
+    "83EC 3C"        // sub esp,3C
+    "53"             // push ebx
+    "55"             // push ebp
+    "56"             // push esi
+    "57"             // push edi
+    "A1 ????????"    // mov eax,dword ptr ds:[1F131C0]
+    "33C4"           // xor eax,esp
+    "50"             // push eax
+    "8D4424 50"      // lea eax,dword ptr ss:[esp+50]
+    "64A3 00000000"  // mov dword ptr fs:[0],eax
+    "8BD9"           // mov ebx,ecx
+    "68 ????????"    // push borderlands.1CC3E78
+    "E8 ????????"    // call borderlands.5C20F0
+    "50"             // push eax
+    "E8 ????????"    // call borderlands.5C2A80
+    "83C4 08"        // add esp,8
+    "85C0"           // test eax,eax
+    "74 ??"          // je borderlands.138F06A
+};
+
+constexpr Pattern<45> INIT_FUNC_141_UDK_SIG{
+    "6A FF"          // push FFFFFFFF
+    "68 ????????"    // push <borderlands.sub_1991338>
+    "64A1 00000000"  // mov eax,dword ptr fs:[0]
+    "50"             // push eax
+    "83EC 3C"        // sub esp,3C
+    "53"             // push ebx
+    "55"             // push ebp
+    "56"             // push esi
+    "57"             // push edi
+    "A1 ????????"    // mov eax,dword ptr ds:[1F16980]
+    "33C4"           // xor eax,esp
+    "50"             // push eax
+    "8D4424 50"      // lea eax,dword ptr ss:[esp+50]
+    "64A3 00000000"  // mov dword ptr fs:[0],eax
+    "8BD9"           // mov ebx,ecx
+    "EB ??"          // jmp borderlands.13ADAC9
+    "4D"             // dec ebp
+    "61"             // popad
+};
+
+// Not sure if this is a __thiscall or an actual __fastcall; ecx is used.
+
+// NOLINTNEXTLINE(*)
+typedef void(__fastcall* init_function)(void* ecx, void* edx);
+
+init_function init_func_ptr = nullptr;
+
+void __fastcall hook_init_func(void* ecx, void* edx) {
+    using std::chrono::duration;
+    auto start = Clock::now();
+    LOG(INFO, "Init function called");
+    init_func_ptr(ecx, edx);
+    LOG(INFO, "Init function took {}s to execute", duration<float>(Clock::now() - start).count());
+
+    // When this is true the unrealscript game engine has been created
+    bl1_has_initialised.store(true, std::memory_order_relaxed);
+}
+
+void hook_init_func(void) {
+    constexpr uintptr_t invalid_addr{0};
+    constexpr auto hook_rate_ms = std::chrono::milliseconds{10};
+    bool has_hooked_init_func = false;
+
+    while (true) {
+        std::this_thread::sleep_for(hook_rate_ms);
+
+        // Steam
+        uintptr_t addr = INIT_FUNC_STEAM_SIG.sigscan_nullable();
+        if (addr != invalid_addr) {
+            has_hooked_init_func =
+                detour(addr, &hook_init_func, &init_func_ptr, "bl1_hook_steam_init_func");
+            if (!has_hooked_init_func) {
+                continue;
+            }
+            return;
+        }
+
+        // UDK 141
+        addr = INIT_FUNC_141_UDK_SIG.sigscan_nullable();
+        if (addr != invalid_addr) {
+            has_hooked_init_func =
+                detour(addr, &hook_init_func, &init_func_ptr, "bl1_hook_udk_init_func");
+            if (!has_hooked_init_func) {
+                continue;
+            }
+            return;
+        }
+    }
+}
+
+}  // namespace
 
 // ############################################################################//
 //  | NOT IMPLEMENTED |

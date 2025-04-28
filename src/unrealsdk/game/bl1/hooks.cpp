@@ -125,15 +125,8 @@ static_assert(std::is_same_v<decltype(&process_event_hook), decltype(&locking_pr
 
 void BL1Hook::hook_process_event(void) {
     const bool locking = locks::FunctionCall::enabled();
-
-    const auto hook_process_event = [&locking] {
-        return detour(PROCESS_EVENT_SIG, locking ? locking_process_event_hook : process_event_hook,
-                      &process_event_ptr, "ProcessEvent");
-    };
-
-    while (!hook_process_event()) {
-        std::this_thread::yield();
-    }
+    detour(PROCESS_EVENT_SIG, locking ? locking_process_event_hook : process_event_hook,
+           &process_event_ptr, "ProcessEvent");
 }
 
 void BL1Hook::process_event(UObject* object, UFunction* func, void* params) const {
@@ -238,15 +231,8 @@ static_assert(std::is_same_v<decltype(&call_function_hook), call_function_func>,
 
 void BL1Hook::hook_call_function(void) {
     const bool locking = locks::FunctionCall::enabled();
-
-    const auto hook_call_function = [&locking] {
-        return detour(CALL_FUNCTION_SIG, locking ? locking_call_function_hook : call_function_hook,
-                      &call_function_ptr, "CallFunction");
-    };
-
-    while (!hook_call_function()) {
-        std::this_thread::yield();
-    }
+    detour(CALL_FUNCTION_SIG, locking ? locking_call_function_hook : call_function_hook,
+           &call_function_ptr, "CallFunction");
 }
 
 }  // namespace unrealsdk::game

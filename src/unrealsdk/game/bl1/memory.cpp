@@ -58,10 +58,7 @@ constexpr Pattern<20> GMALLOC_PATTERN{
 // ############################################################################//
 
 void BL1Hook::find_gmalloc(void) {
-    while (gmalloc == nullptr) {
-        gmalloc = *read_offset<FMalloc**>(GMALLOC_PATTERN.sigscan("GMalloc"));
-        std::this_thread::yield();
-    }
+    gmalloc = *read_offset<FMalloc**>(GMALLOC_PATTERN.sigscan("GMalloc"));
     LOG(MISC, "GMalloc: {:p}", reinterpret_cast<void*>(gmalloc));
 }
 
